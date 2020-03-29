@@ -1,0 +1,49 @@
+<h2 style="text-align: center;">Description</h2>
+
+<p>Of course, we cannot use flashcards with only one card. Let's make our program dynamic! Implement a custom card creation mechanism. The program should read a <em>term</em> and a <em>definition</em> from the console and create a card.</p>
+
+<p>After that, the user inputs a line as an <strong>answer</strong> (a definition of the term on the card). Compare the user's answer to the correct definition and print the verdict.</p>
+
+<p>You can use <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.random/-random/index.html" rel="noopener noreferrer nofollow">Random.nextInt(...)</a> to generate random numbers.</p>
+
+<h2 style="text-align: center;">How to submit?</h2>
+
+<p>This stage is auto-graded. The grader will input 3 lines (term, definition, answer) and check that your output contains a word:</p>
+
+<ul>
+	<li><code>wrong</code> if the answer isn't equal to the definition,</li>
+	<li><code>right</code> if the answer is equal to the definition.</li>
+</ul>
+
+<p> </p>
+
+<p>Again, here are some examples to clarify the stage.</p>
+
+<h2 style="text-align: center;">Examples</h2>
+
+<p><strong>Example 1:</strong></p>
+
+<p>Input</p>
+
+<pre><code class="language-no-highlight">a purring animal
+cat
+cat
+</code></pre>
+
+<p>Output</p>
+
+<pre><code class="language-no-highlight">Your answer is right!
+</code></pre>
+
+<p><strong>Example 2:</strong></p>
+
+<p>Input</p>
+
+<pre><code class="language-no-highlight">a barking animal
+dog
+cat
+</code></pre>
+
+<p>Output</p>
+
+<pre><code class="language-no-highlight">Your answer is wrong...</code></pre>

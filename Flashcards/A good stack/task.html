@@ -1,0 +1,57 @@
+<h2 style="text-align: center;">Description</h2>
+
+<p>Let’s imagine that the user enters the wrong definition for the requested term, but this definition is correct for another term. In the next stage of the project, we’ll consider situations like this.</p>
+
+<p>You can use maps to address these cases. Ask for the definitions of all cards in the order of addition. If the definition is wrong for the current term but correct for another, output the original term.</p>
+
+<p>When the user tries to add a duplicated term or definition, forbid it and ask again until the user inputs a unique one. For now, you are able to implement this without needing to use a <code>try catch</code> construction. Follow the rule: if you can avoid exception-based logic, avoid it!</p>
+
+<h2 style="text-align: center;">Examples</h2>
+
+<p>The symbol <code>&gt;</code> represents the user input. Notice that it's not the part of the input.</p>
+
+<p><strong>Example 1:</strong></p>
+
+<pre><code class="language-no-highlight">Input the number of cards:
+&gt; 2
+The card #1:
+&gt; black
+The definition of the card #1:
+&gt; white
+The card #2:
+&gt; black
+The card "black" already exists. Try again:
+&gt; red
+The definition of the card #2:
+&gt; white
+The definition "white" already exists. Try again:
+&gt; green
+Print the definition of "black":
+&gt; white
+Correct answer.
+Print the definition of "red":
+&gt; green
+Correct answer.
+</code></pre>
+
+<p><strong>Example 2:</strong></p>
+
+<pre><code class="language-no-highlight">Input the number of cards:
+&gt; 2
+The card #1:
+&gt; a brother of one's parent
+The definition of the card #1:
+&gt; uncle
+The card #2:
+&gt; a part of the body where the foot and the leg meet
+The definition of the card #2:
+&gt; ankle
+Print the definition of "a brother of one's parent":
+&gt; ankle
+Wrong answer. The correct one is "uncle", you've just written the definition of "a part of the body where the foot and the leg meet".
+Print the definition of "a part of the body where the foot and the leg meet":
+&gt; ???
+Wrong answer. The correct one is "ankle".
+</code></pre>
+
+<p><em>Note that all your outputs and user inputs should be on separate lines.</em></p>

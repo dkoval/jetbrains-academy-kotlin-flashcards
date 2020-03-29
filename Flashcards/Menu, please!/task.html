@@ -1,0 +1,163 @@
+<h2 style="text-align: center;">Description</h2>
+
+<p>Improve the application's interactivity by having it ask the user for and perform an action.<br>
+<br>
+The program should support these actions:</p>
+
+<ul>
+	<li>add a card: <code>add</code>,</li>
+	<li>remove a card: <code>remove</code>,</li>
+	<li>load cards from file: <code>import</code>,</li>
+	<li>save cards to file: <code>export</code>,</li>
+	<li>ask for a definition of some random cards: <code>ask</code>,</li>
+	<li>exit the program: <code>exit</code>.</li>
+</ul>
+
+<p>When entering the word <code>export</code>, the program should request a file name and write all currently available cards into this file.<br>
+When entering the word <code>import</code>, the program should request a file name and read all the cards written to this file.</p>
+
+<p>You can use any format to save cards to the file. Tests do not check the content of the file, but they do check that all saved cards are loaded correctly.</p>
+
+<p>At this stage, if you try to add a card with an existing term or definition, the application will reject it and print an error message (see example 1).</p>
+
+<p>When you load cards from a file, you shouldn't erase the cards that aren't in the file. If the imported card already exists, it should update the old one (look at the Japan and Moscow cards in example 2). There won't be any conflicts with definitions in the tests.</p>
+
+<p>You can use <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.io/java.io.-file/write-text.html" rel="noopener noreferrer nofollow">writeText</a> function to save the data to a file.</p>
+
+<h2 style="text-align: center;">Examples</h2>
+
+<p>The symbol <code>&gt;</code> represents the user input. Notice that it's not the part of the input.</p>
+
+<p><strong>Example 1:</strong></p>
+
+<pre><code class="language-no-highlight">Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card:
+&gt; France
+The definition of the card:
+&gt; Paris
+The pair ("France":"Paris") has been added.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card:
+&gt; France
+The card "France" already exists.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card:
+&gt; Great Britain
+The definition of the card:
+&gt; Paris
+The definition "Paris" already exists.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; remove
+The card:
+&gt; France
+The card has been removed.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; remove
+The card:
+&gt; Wakanda
+Can't remove "Wakanda": there is no such card.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; exit
+Bye bye!</code></pre>
+
+<p><strong>Example 2:</strong></p>
+
+<pre><code class="language-no-highlight">Input the action (add, remove, import, export, ask, exit):
+&gt; import
+File name:
+&gt; ghost_file.txt
+File not found.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card:
+&gt; Japan
+The definition of the card:
+&gt; Tokyo
+The pair ("Japan":"Tokyo") has been added.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card:
+&gt; Russia
+The definition of the card:
+&gt; UpdateMeFromFile
+The pair ("Russia":"UpdateMeFromFile") has been added.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; import
+File name:
+&gt; capitals.txt
+28 cards have been loaded.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; ask
+How many times to ask?
+&gt; 1
+Print the definition of "Russia":
+&gt; Moscow
+Correct answer.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; export
+File name:
+&gt; capitalsNew.txt
+29 cards have been saved.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; exit
+Bye bye!</code></pre>
+
+<p><strong>Example 3:</strong></p>
+
+<pre><code class="language-no-highlight">Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card
+&gt; a brother of one's parent
+The definition of the card
+&gt; uncle
+The pair ("a brother of one's parent":"uncle") has been added.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; add
+The card
+&gt; a part of the body where the foot and the leg meet
+The definition of the card
+&gt; ankle
+The pair ("a part of the body where the foot and the leg meet":"ankle") has been added.
+
+Input the action (add, remove, import, export, ask, exit):
+&gt; ask
+How many times to ask?
+&gt; 6
+Print the definition of "a brother of one's parent":
+&gt; ankle
+Wrong answer. The correct one is "uncle", you've just written the definition of "a part of the body where the foot and the leg meet".
+Print the definition of "a part of the body where the foot and the leg meet":
+&gt; ??
+Wrong answer. The correct one is "ankle".
+Print the definition of "a brother of one's parent":
+&gt; uncle
+Correct answer
+Print the definition of "a part of the body where the foot and the leg meet":
+&gt; ankle
+Correct answer
+Print the definition of "a brother of one's parent":
+&gt; ??
+Wrong answer. The correct one is "uncle".
+Print the definition of "a part of the body where the foot and the leg meet":
+&gt; uncle
+Wrong answer. The correct one is "ankle", you've just written the definition of "a brother of one's parent".
+Input the action (add, remove, import, export, ask, exit):
+&gt; exit
+Bye bye!</code></pre>
+
+<p><em>Note that all your outputs and user inputs should be on separate lines.</em></p>

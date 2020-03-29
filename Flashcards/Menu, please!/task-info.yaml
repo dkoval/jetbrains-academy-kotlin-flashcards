@@ -1,0 +1,322 @@
+type: edu
+custom_name: stage5
+files:
+- name: test/FlashcardsTest.java
+  visible: false
+  text: |
+    import flashcards.MainKt;
+    import org.hyperskill.hstest.v6.stage.BaseStageTest;
+
+    public abstract class FlashcardsTest<T> extends BaseStageTest<T> {
+        public FlashcardsTest() {
+            super(MainKt.class);
+        }
+    }
+  learner_created: false
+- name: test/DialogClue.kt
+  visible: false
+  text: |
+    import org.hyperskill.hstest.v6.testcase.CheckResult
+    import org.hyperskill.hstest.v6.testcase.TestCase
+
+
+    // ---- DialogClue ----
+
+    /** May be several lines or just one. */
+    interface Phrase {
+        fun toPhraseLines(): List<PhraseLine>
+    }
+
+    /** list of input and output lines, combined together. */
+    fun compositePhrase(block: () -> List<Phrase>) = object : Phrase {
+        override fun toPhraseLines() = block().flatMap { it.toPhraseLines() }
+    }
+
+    fun compositePhrase(vararg phrases: Phrase) = object : Phrase {
+        override fun toPhraseLines() = phrases.flatMap { it.toPhraseLines() }
+    }
+
+    /** Either user (input) or output phrase. Each phrase should be a line. */
+    sealed class PhraseLine : Phrase {
+        override fun toPhraseLines() = listOf(this)
+    }
+
+    /** Some mutable data, that is passed across dialog phrases. */
+    class Context {
+        val rawData = mutableMapOf<String, Any>()
+    }
+
+    class UserLine(val text: String, val updateContext: CtxUpdate = {}) : PhraseLine() {
+
+    }
+    typealias CtxUpdate = (ctx: Context) -> Unit
+
+    class OutputLine(val checker: (text: String, ctx: Context) -> CheckResult) : PhraseLine()
+
+    /** This function creates a line with user input (our test input).
+     *
+     * Unfortunately we can't access the Context, when we adding user text.
+     * This occurs because of HS test framework limitations:
+     * we need to pass all inputs first, and then start checking outputs. */
+    fun user(text: String, updateContext: (ctx: Context) -> Unit = {}) = UserLine(text, updateContext)
+
+    fun anyLine() = OutputLine { _, _ -> CheckResult.TRUE }
+
+    fun containing(
+            vararg parts: String,
+            ignoreCase: Boolean = true,
+            hint: String? = null,
+            updateContext: CtxUpdate = {}
+    ) = OutputLine { line, context ->
+        fun buildFeedback(): String {
+            val feedback = StringBuilder()
+            feedback.append("Your line\n`$line`\nshould contain ${parts.joinToString("`, `", "`", "`")}")
+            if (ignoreCase) {
+                feedback.append(" (ignoring case)")
+            }
+            feedback.append(".")
+            if (hint != null) {
+                feedback.append("\n$hint")
+            }
+            return feedback.toString()
+        }
+
+        var startIndex = 0
+        for (part in parts) {
+            startIndex = line.indexOf(part, startIndex, ignoreCase)
+            if (startIndex == -1) {
+                return@OutputLine CheckResult.FALSE(buildFeedback())
+            }
+        }
+        updateContext(context) // everything is correct, update context
+        CheckResult.TRUE
+    }
+
+    class DialogClue(private val phrases: List<PhraseLine>) {
+
+        private val inputPhrases = phrases.filter { it is UserLine }.map { it as UserLine }
+        private val outputPhrases = phrases.filter { it is OutputLine }.map { it as OutputLine }
+
+        fun generateInput() = inputPhrases
+                .joinToString("\n", postfix = "\n") { it.text }
+
+        fun checkOutput(output: String): CheckResult {
+            val lines = output.lines()
+                    .filter { it.isNotBlank() }
+
+            fun wrongOutputSizeFeedback() = CheckResult.FALSE("The number of lines in your output is ${lines.size}, " +
+                    "but it should be ${outputPhrases.size}. " +
+                    "Check, that you output your lines with println, not print. And there are no extra outputs.")
+
+    // here we store some mutable data from phrase to phrase
+            val context = Context()
+
+            val lineIter = lines.listIterator()
+            phrases.forEach { phraseLine ->
+                when (phraseLine) {
+                    is UserLine -> phraseLine.updateContext(context)
+                    is OutputLine -> {
+                        if (!lineIter.hasNext()) {
+                            return wrongOutputSizeFeedback()
+                        }
+
+                        val line: String = lineIter.next()
+                        val result = phraseLine.checker(line, context)
+                        if (result != CheckResult.TRUE) {
+                            return CheckResult.FALSE(result.feedback)
+                        }
+                    }
+                }
+            }
+
+            if (lineIter.hasNext()) {
+                return wrongOutputSizeFeedback()
+            }
+
+            return CheckResult.TRUE
+        }
+    }
+
+    fun dialogTest(vararg phrases: Phrase): TestCase<DialogClue> {
+        val dialogClue = DialogClue(phrases.flatMap { it.toPhraseLines() })
+        return TestCase<DialogClue>()
+                .setInput(dialogClue.generateInput())
+                .setAttach(dialogClue)
+    }
+  learner_created: false
+- name: test/FlashcardsStage5Test.kt
+  visible: false
+  text: "import org.hyperskill.hstest.v6.testcase.CheckResult\nimport org.hyperskill.hstest.v6.testcase.TestCase\n\
+    \nclass FlashcardsStage5Test : FlashcardsTest<DialogClue>() {\n\n    // how to\
+    \ remove files? Now at least rewrite in the first test:\n    override fun generate():\
+    \ List<TestCase<DialogClue>> {\n        val tests = mutableListOf<TestCase<DialogClue>>()\n\
+    \        // old tests:\n        tests += dialogTest(\n                addCard(\"\
+    black\", \"white\"),\n                existingCard(\"black\"),\n             \
+    \   existingDef(\"red\", \"white\"),\n                askCards(\"white\", \"green\"\
+    ), // the ask order is random\n                exit()\n        )\n        tests\
+    \ += dialogTest(\n                addCard(\"a brother of one's parent\", \"uncle\"\
+    ),\n                addCard(\"a part of the body where the foot and the leg meet\"\
+    , \"ankle\"),\n                askCards(\"ankle\", \"??\", \"uncle\", \"ankle\"\
+    , \"??\", \"uncle\"), // the ask order is random\n                exit()\n   \
+    \     )\n        // stage 5 tests:\n\n        val capitalList = mutableListOf<Pair<String,\
+    \ String>>()\n        fun capitals() = capitalList.toTypedArray()\n\n        //\
+    \ wrappers for add/remove card, but saving cards to capitalList:\n        fun\
+    \ addCapital(card: String, def: String) = addCard(card, def)\n               \
+    \ .also { capitalList += card to def }\n\n        fun removeCapitalCard(card:\
+    \ String) = removeCard(card)\n                .also { capitalList.removeIf { it.first\
+    \ == card } }\n\n        // testing files\n        // clear files\n        tests\
+    \ += dialogTest(\n                exportCards(\"capitals.txt\", 0),\n        \
+    \        exportCards(\"capitalsNew.txt\", 0),\n                exit()\n      \
+    \  )\n        tests += dialogTest(\n                importNonExisting(\"ghost_file.txt\"\
+    ),\n                exit()\n        )\n        tests += dialogTest(\n        \
+    \        addCapital(\"Great Britain\", \"London\"),\n                removeNonExisting(\"\
+    Wakanda\"),\n                exportCards(\"capitals.txt\", 1),\n             \
+    \   importCards(\"capitals.txt\", *capitals()),\n                askCards(\"London\"\
+    ),\n                exportCards(\"capitalsNew.txt\", 1),\n                exit()\n\
+    \        )\n        tests += dialogTest(\n                importCards(\"capitalsNew.txt\"\
+    , *capitals()), // import checks only the amount of cards\n                exit()\n\
+    \        )\n        tests += dialogTest(\n                importCards(\"capitalsNew.txt\"\
+    , *capitals()),\n                addCapital(\"France\", \"Paris\"),\n        \
+    \        addCapital(\"Russia\", \"Moscow\"),\n                removeCapitalCard(\"\
+    Great Britain\"),\n                exportCards(\"capitalsNew.txt\", 2),\n    \
+    \            importCards(\"capitalsNew.txt\", *capitals()),\n                askCards(\"\
+    London\", \"Paris\", \"Moscow\", \"Paris\"),\n                exit()\n       \
+    \ )\n        // check merge with file import\n        tests += dialogTest(\n \
+    \               addCard(\"Japan\", \"Tokyo\"), // should be merged\n         \
+    \       addCard(\"France\", \"UpdateMeFromImport\"), // should be updated from\
+    \ import file\n                addCard(\"Russia\", \"UpdateMeFromImport2\"), //\
+    \ should be updated from import file\n                importCards(\"capitalsNew.txt\"\
+    , *capitals()),\n                askCards(\"Tokyo\", \"Paris\", \"Moscow\"),\n\
+    \                removeCard(\"Japan\"),\n                removeCapitalCard(\"\
+    Russia\"),\n                exportCards(\"capitalsNew.txt\", 1), // only France\
+    \ left\n                exit()\n        )\n\n        // check reverse map while\
+    \ merge\n        tests += dialogTest(\n                addCard(\"France\", \"\
+    UpdateMeFromImport\"), // should be updated from import file\n               \
+    \ importCards(\"capitalsNew.txt\", *capitals()),\n                askCards(\"\
+    UpdateMeFromImport\"), // check that we removed from reverse map\n           \
+    \     exit()\n        )\n        \n        // check remove, add and ask:\n   \
+    \     tests += dialogTest(\n                addCard(\"a\", \"1\"),\n         \
+    \       addCard(\"b\", \"2\"),\n                addCard(\"c\", \"3\"),\n     \
+    \           existingCard(\"b\"),\n                existingCard(\"c\"),\n     \
+    \           addCard(\"d\", \"4\"),\n                removeCard(\"c\"),\n     \
+    \           removeNonExisting(\"xxxx\"),\n                addCard(\"c\", \"5\"\
+    ),\n                existingDef(\"new card\", \"4\"),\n                existingDef(\"\
+    f\", \"5\"),\n                removeCard(\"c\"),\n                removeCard(\"\
+    d\"), // left only a and b\n                askCards(\"1\", \"2\", \"3\", \"4\"\
+    , \"3\", \"2\", \"1\"), // try to fit random\n                askCards(\"2\"),\n\
+    \                exit()\n        )\n        return tests\n    }\n\n    override\
+    \ fun check(reply: String, clue: DialogClue): CheckResult {\n        return clue.checkOutput(reply)\n\
+    \    }\n\n\n    // ------ extensions for building a dialog: ------\n\n    fun\
+    \ inputAction(action: String) = compositePhrase {\n        listOf(containing(\"\
+    action\", hint = \"This line should ask the action.\"), user(action))\n    }\n\
+    \n    // extend dialog context with our own data:\n\n    @Suppress(\"UNCHECKED_CAST\"\
+    )\n    private val Context.cardToDef\n        get() = rawData.getOrPut(\"cardToDef\"\
+    ) { mutableMapOf<String, String>() } as MutableMap<String, String>\n\n    @Suppress(\"\
+    UNCHECKED_CAST\")\n    private val Context.defToCard\n        get() = rawData.getOrPut(\"\
+    defToCard\") { mutableMapOf<String, String>() } as MutableMap<String, String>\n\
+    \n    private fun Context.addCard(card: String, definition: String) {\n      \
+    \  cardToDef[card] = definition\n        defToCard[definition] = card\n    }\n\
+    \n    private fun Context.removeCard(card: String) {\n        val def = cardToDef.remove(card)\n\
+    \        if (def != null) {\n            defToCard.remove(def)\n        }\n  \
+    \  }\n\n\n    private fun addCard(card: String, def: String) = compositePhrase(\n\
+    \            inputAction(\"add\"),\n            anyLine(), user(card),\n     \
+    \       anyLine(), user(def),\n            containing(\"has been added\",\n  \
+    \                  hint = \"This line should add the pair (\\\"$card\\\":\\\"\
+    $def\\\").\",\n                    updateContext = { ctx -> ctx.addCard(card,\
+    \ def) })\n    )\n\n\n    private fun existingDef(card: String, def: String) =\
+    \ compositePhrase(\n            inputAction(\"add\"),\n            anyLine(),\
+    \ user(card),\n            anyLine(), user(def),\n            containing(\"definition\"\
+    , \"exists\", hint = \"This line should reject the existing definition `$def`.\"\
+    )\n    )\n\n\n    private fun existingCard(card: String) = compositePhrase(\n\
+    \            inputAction(\"add\"),\n            anyLine(), user(card),\n     \
+    \       containing(\"card\", \"exists\", hint = \"This line should reject the\
+    \ existing card `$card`.\")\n    )\n\n    private fun removeCard(card: String)\
+    \ = compositePhrase(\n            inputAction(\"remove\"),\n            anyLine(),\
+    \ user(card),\n            containing(\"has been removed\", hint = \"This line\
+    \ should remove the card `$card`.\",\n                    updateContext = { ctx\
+    \ -> ctx.removeCard(card) })\n    )\n\n    private fun removeNonExisting(card:\
+    \ String) = compositePhrase(\n            inputAction(\"remove\"),\n         \
+    \   anyLine(), user(card),\n            containing(\"Can't remove \\\"$card\\\"\
+    \", hint = \"This line should reject removing non existing card `$card`.\")\n\
+    \    )\n\n\n    private fun importCards(fileName: String, vararg cards: Pair<String,\
+    \ String>) = compositePhrase(\n            inputAction(\"import\"),\n        \
+    \    anyLine(), user(fileName),\n            containing(\"${cards.size} cards\
+    \ have been loaded\",\n                    updateContext = { ctx ->\n        \
+    \                val cardToDef = ctx.cardToDef\n                        val defToCard\
+    \ = ctx.defToCard\n                        cards.forEach { (card, def) ->\n  \
+    \                          if (card in cardToDef) {\n                        \
+    \        defToCard.remove(cardToDef[card]) // erase wrong reverse link\n     \
+    \                       }\n                            ctx.addCard(card, def)\
+    \ // with update!!\n                        }\n                    })\n    )\n\
+    \n    private fun importNonExisting(fileName: String) = compositePhrase(\n   \
+    \         inputAction(\"import\"),\n            anyLine(), user(fileName),\n \
+    \           containing(\"not found\", hint = \"This line should say, that the\
+    \ file $fileName does not exist.\")\n    )\n\n    private fun exportCards(fileName:\
+    \ String, cardsSize: Int) = compositePhrase(\n            inputAction(\"export\"\
+    ),\n            anyLine(), user(fileName),\n            containing(\"$cardsSize\
+    \ cards have been saved\")\n    )\n\n    private fun exit() = compositePhrase(\n\
+    \            inputAction(\"exit\"),\n            anyLine()\n    )\n\n    /** Perform\
+    \ ask action. [ansDefs] are our test answers with definitions.\n     * We don't\
+    \ know are they wrong or correct, because the test is random. */\n    private\
+    \ fun askCards(vararg ansDefs: String) = compositePhrase {\n        val startPhrases\
+    \ = listOf(\n                inputAction(\"ask\"),\n                anyLine(),\
+    \ user(ansDefs.size.toString())\n        )\n        // here we add the dialog\
+    \ logic, by creating base OutputLine class with a custom checker\n        // we\
+    \ use context to connect with neighbor checkers\n\n        // iterate test answered\
+    \ definitions:\n        val repeatingPhrases = ansDefs.map { ansDef ->\n     \
+    \       compositePhrase(\n                    OutputLine { text, ctx ->\n    \
+    \                    val askedCard = text.dropWhile { it != '\"' }.dropLastWhile\
+    \ { it != '\"' }.trim('\"')\n                        if (askedCard.isEmpty())\
+    \ {\n                            return@OutputLine CheckResult.FALSE(\"Not found\
+    \ card in quotes. \" +\n                                    \"This line should\
+    \ ask the definition of a random card.\")\n                        }\n       \
+    \                 if (askedCard !in ctx.cardToDef) {\n                       \
+    \     return@OutputLine CheckResult.FALSE(\"You asked the definition of the non\
+    \ existing card: `$askedCard`.\")\n                        }\n               \
+    \         ctx.rawData[\"lastAskedCard\"] = askedCard\n                       \
+    \ CheckResult.TRUE\n                    },\n                    // unfortunately\
+    \ we can't access the Context in user action, see documentation of user()\n  \
+    \                  user(ansDef),\n                    // check the answer:\n \
+    \                   OutputLine { text, ctx ->\n                        val askedCard\
+    \ = ctx.rawData[\"lastAskedCard\"]\n                                ?: throw IllegalStateException(\"\
+    Not found lastAskedCard in the `ask` checker.\")\n                        val\
+    \ cardToDef = ctx.cardToDef\n                        val defToCard = ctx.defToCard\n\
+    \                        val rightAns = cardToDef[askedCard]\n\n             \
+    \           val hint = \"The asked card was `$askedCard`, the answer was `$ansDef`.\"\
+    \n                        if (cardToDef[askedCard] == ansDef)\n              \
+    \              containing(\"Correct answer\", hint = hint).checker(text, ctx)\n\
+    \                        else {\n                            val isDefFor = defToCard[ansDef]\n\
+    \                            if (isDefFor != null) {\n                       \
+    \         containing(\"Wrong answer\", \"The correct one is \\\"$rightAns\\\"\"\
+    ,\n                                        \"you've just written the definition\
+    \ of \\\"$isDefFor\\\"\", hint = hint).checker(text, ctx)\n                  \
+    \          } else {\n                                // should not contain definition\
+    \ hint!!\n                                if (text.contains(\"you've just written\
+    \ the definition of\")) {\n                                    CheckResult.FALSE(\"\
+    Your line\\n`$text`\\nshould NOT contain \" +\n                              \
+    \              \"`you've just written the definition of`.\\n$hint\")\n       \
+    \                         } else {\n                                    containing(\"\
+    Wrong answer\", \"The correct one is \\\"$rightAns\\\"\", hint = hint).checker(text,\
+    \ ctx)\n                                }\n                                \n\
+    \                            }\n                        }\n                  \
+    \  }\n            )\n        }\n        (startPhrases + repeatingPhrases)\n  \
+    \  }\n\n}\n\n"
+  learner_created: false
+- name: src/flashcards/Main.kt
+  visible: true
+  text: |
+    package flashcards
+
+    fun main() {
+        println("Hello, World!")
+    }
+  learner_created: false
+- name: capitalsNew.txt
+  visible: true
+  learner_created: true
+- name: capitals.txt
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/projects/83/stages/461/implement
+status: Solved
+record: 5

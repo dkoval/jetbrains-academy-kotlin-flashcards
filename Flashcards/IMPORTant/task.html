@@ -1,0 +1,22 @@
+<h2 style="text-align: center;">Description</h2>
+
+<p>Users often use files to save their progress and restore it next time they run the program. It's tedious to print the actions manually. Sometimes you can just forget to do it! So let's add run arguments that define which file to read at the start and which file to save at the exit.</p>
+
+<p>To read an initial card set from an external file, you should pass the argument <code>-import</code> and follow it with the file name. If the argument is present, the first line of your program output should be <code>10 cards have been loaded.</code> Later on, replace <code>10</code> with the number of cards. If such an argument is not set, the set of cards should initially be empty.</p>
+
+<p>If the <code>-export</code> argument is set and followed by the file name, you should write all the cards that are in the program memory into this file after the user has entered <code>exit</code>, and the last line of your program should be <code>10 cards have been saved.</code></p>
+
+<p>You can look at <a href="https://www.topjavatutorial.com/kotlin/reading-command-line-arguments-in-kotlin/" rel="noopener noreferrer nofollow">this tutorial</a> to see how to work with the command line arguments.</p>
+
+<h2 style="text-align: center;">Run arguments examples</h2>
+
+<pre><code class="language-no-highlight">java Flashcards -import derivatives.txt
+</code></pre>
+
+<pre><code class="language-no-highlight">java Flashcards -export animals.txt
+</code></pre>
+
+<pre><code class="language-no-highlight">java Flashcards -import words13june.txt -export words14june.txt
+</code></pre>
+
+<pre><code class="language-no-highlight">java Flashcards -export vocab.txt -import vocab.txt </code></pre>

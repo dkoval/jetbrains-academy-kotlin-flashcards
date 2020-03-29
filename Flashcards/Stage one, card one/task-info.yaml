@@ -1,0 +1,77 @@
+type: edu
+custom_name: stage1
+files:
+- name: src/flashcards/Main.kt
+  visible: true
+  text: |
+    package flashcards
+
+    fun main() {
+        println("Hello, World!")
+    }
+  learner_created: false
+- name: test/FlashcardsTest.java
+  visible: false
+  text: |
+    import flashcards.MainKt;
+    import org.hyperskill.hstest.v6.stage.BaseStageTest;
+    import org.hyperskill.hstest.v6.testcase.CheckResult;
+    import org.hyperskill.hstest.v6.testcase.TestCase;
+
+    import java.util.Arrays;
+    import java.util.List;
+
+    public class FlashcardsTest extends BaseStageTest {
+        public FlashcardsTest() {
+            super(MainKt.class);
+        }
+
+        @Override
+        public List<TestCase> generate() {
+            return Arrays.asList(new TestCase<>());
+        }
+
+        @Override
+        public CheckResult check(String reply, Object attach) {
+            int LINE_COUNT = 4;
+            String FIRST_LINE = "Card:";
+            String THIRD_LINE = "Definition:";
+
+            String[] lines = reply.trim().split("\n");
+
+            if (lines.length != LINE_COUNT) {
+                return new CheckResult(
+                    false,
+                    "Your program prints " + LINE_COUNT +
+                        " line" + (lines.length == 1 ? "" : "s") + "\n" +
+                        LINE_COUNT + " lines were expected."
+                );
+            }
+
+            String firstLine = lines[0];
+
+            if (!firstLine.equals(FIRST_LINE)) {
+                return new CheckResult(
+                    false,
+                    "Your first line is \"" + firstLine + "\" " +
+                        "but \"" + FIRST_LINE + "\" was expected."
+                );
+            }
+
+            String thirdLine = lines[2];
+
+            if (!thirdLine.equals(THIRD_LINE)) {
+                return new CheckResult(
+                    false,
+                    "Your third line is \"" + thirdLine + "\" " +
+                        "but \"" + THIRD_LINE + "\" was expected."
+                );
+            }
+
+            return CheckResult.TRUE;
+        }
+    }
+  learner_created: false
+feedback_link: https://hyperskill.org/projects/83/stages/457/implement
+status: Solved
+record: 1

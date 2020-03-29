@@ -1,0 +1,14 @@
+type: hyperskill
+title: Flashcards
+language: English
+summary: One of the most difficult parts of learning a new language is remembering
+  all the words you need to memorize, which is exactly what flashcards are for. Typically,
+  flashcards show a hint (a task or a picture) on one side and the correct answer
+  on the other. Flashcards can be used to remember all kinds of information, so if
+  you want to create something useful to help you enhance your programming skills,
+  this project may be just right for you.<br/><br/>Learn more at <a href="https://hyperskill.org">https://hyperskill.org/projects/83</a>
+programming_language: Kotlin
+content:
+- Flashcards
+- Problems
+mode: Study
